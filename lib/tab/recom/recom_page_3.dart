@@ -3,7 +3,9 @@ import 'recom_page_4.dart';
 
 class RecomPage3 extends StatefulWidget {
   final bool isWarmTone;
-  const RecomPage3({Key? key, required this.isWarmTone}) : super(key: key);
+  final String tone;
+
+  const RecomPage3({Key? key, required this.isWarmTone, required this.tone}) : super(key: key);
 
   @override
   _RecomPage3State createState() => _RecomPage3State();
@@ -12,13 +14,23 @@ class RecomPage3 extends StatefulWidget {
 class _RecomPage3State extends State<RecomPage3> {
   late bool _isWarmToneActive;
   late bool _isCoolToneActive;
+  String _season = '';
 
   @override
   void initState() {
     super.initState();
-    // 초기 상태 설정
     _isWarmToneActive = widget.isWarmTone;
     _isCoolToneActive = !widget.isWarmTone;
+  }
+
+  void _navigateToNextPage(String season) {
+    _season = season;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RecomPage4(isWarmTone: widget.isWarmTone, tone: widget.tone, season: _season),
+      ),
+    );
   }
 
   @override
@@ -44,28 +56,21 @@ class _RecomPage3State extends State<RecomPage3> {
               shrinkWrap: true,
               crossAxisCount: 2,
               childAspectRatio: (MediaQuery.of(context).size.width / 2 - 28) / 50,
-              mainAxisSpacing: 16, // 세로 간격
-              crossAxisSpacing: 16, // 가로 간격
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
               children: <Widget>[
                 ElevatedButton(
                   onPressed: _isWarmToneActive ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => RecomPage4()),
-                    );
+                    _navigateToNextPage('봄');
                   } : null,
                   child: Text('봄'),
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(double.infinity, 50),
                   ),
                 ),
-
                 ElevatedButton(
                   onPressed: _isWarmToneActive ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => RecomPage4()),
-                    );
+                    _navigateToNextPage('가을');
                   } : null,
                   child: Text('가을'),
                   style: ElevatedButton.styleFrom(
@@ -74,10 +79,7 @@ class _RecomPage3State extends State<RecomPage3> {
                 ),
                 ElevatedButton(
                   onPressed: _isCoolToneActive ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => RecomPage4()),
-                    );
+                    _navigateToNextPage('여름');
                   } : null,
                   child: Text('여름'),
                   style: ElevatedButton.styleFrom(
@@ -86,10 +88,7 @@ class _RecomPage3State extends State<RecomPage3> {
                 ),
                 ElevatedButton(
                   onPressed: _isCoolToneActive ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => RecomPage4()),
-                    );
+                    _navigateToNextPage('겨울');
                   } : null,
                   child: Text('겨울'),
                   style: ElevatedButton.styleFrom(

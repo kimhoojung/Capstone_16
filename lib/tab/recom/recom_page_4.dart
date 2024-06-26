@@ -2,7 +2,30 @@ import 'package:flutter/material.dart';
 import 'recom_page_5.dart';
 
 class RecomPage4 extends StatelessWidget {
-  const RecomPage4({Key? key}) : super(key: key);
+  final bool isWarmTone;
+  final String tone;
+  final String season;
+
+  const RecomPage4({
+    Key? key,
+    required this.isWarmTone,
+    required this.tone,
+    required this.season,
+  }) : super(key: key);
+
+  void _navigateToNextPage(BuildContext context, String subSeason) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RecomPage5(
+          isWarmTone: isWarmTone,
+          tone: tone,
+          season: season,
+          subSeason: subSeason,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11,7 +34,7 @@ class RecomPage4 extends StatelessWidget {
         title: Text('정보 입력'),
       ),
       body: SingleChildScrollView(
-        child: Center( // Center 위젯을 추가하여 내용을 중앙에 정렬
+        child: Center(
           child: Padding(
             padding: EdgeInsets.all(16),
             child: Column(
@@ -24,28 +47,42 @@ class RecomPage4 extends StatelessWidget {
                 ),
                 SizedBox(height: 32),
                 Wrap(
-                  spacing: 16, // 가로 간격
-                  runSpacing: 16, // 세로 간격
+                  spacing: 16,
+                  runSpacing: 16,
                   alignment: WrapAlignment.center,
                   children: List<Widget>.generate(
-                    7, // 버튼 개수
-                        (index) => ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => RecomPage5()),
-                        );
-                      },
-                      child: Text(
-                        '#${['Soft(Mute)', 'Light', 'Bright', 'Deep(Dark)', 'Vivid', 'True', 'Strong'][index]}',
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20), // 둥근 모서리
+                    5,
+                        (index) {
+                      String subSeason = ['Soft(Mute)', 'Light', 'Bright', 'Deep(Dark)', 'True'][index];
+                      bool isActive = false;
+
+                      if (season == '봄' && ['Light', 'Bright', 'True'].contains(subSeason)) {
+                        isActive = true;
+                      } else if (season == '여름' && ['Light', 'True', 'Soft(Mute)'].contains(subSeason)) {
+                        isActive = true;
+                      } else if (season == '가을' && ['Soft(Mute)', 'True', 'Deep(Dark)'].contains(subSeason)) {
+                        isActive = true;
+                      } else if (season == '겨울' && ['Bright', 'True', 'Deep(Dark)'].contains(subSeason)) {
+                        isActive = true;
+                      }
+
+                      return ElevatedButton(
+                        onPressed: isActive
+                            ? () {
+                          _navigateToNextPage(context, subSeason);
+                        }
+                            : null,
+                        child: Text(
+                          '#$subSeason',
                         ),
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                      ),
-                    ),
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
