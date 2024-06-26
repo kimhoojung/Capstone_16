@@ -28,7 +28,6 @@ class SearchPage1 extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(16),
             height: 160, // 전체 가로 스크롤 섹션의 높이 설정
-
             child: ListView.builder(
               scrollDirection: Axis.horizontal, // 스크롤 방향을 가로로 설정
               itemCount: 5, // 생성할 아이템의 개수
@@ -82,13 +81,13 @@ class SearchPage1 extends StatelessWidget {
               itemCount: 5, // 세로 스크롤 카드 개수
               itemBuilder: (BuildContext context, int index) {
                 // 카드에 표시할 정보 (더미 데이터)
-                String name = '제품 $index';
-                String personalColorInfo = '퍼스널 컬러 정보 $index';
-                String productInfo = '제품에 대한 설명 $index';
+                String name = '제품 ${index + 5}';
+                String personalColorInfo = '퍼스널 컬러 정보 ${index + 5}';
+                String productInfo = '제품에 대한 설명 ${index + 5}';
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: _buildProfileCard(context, name, personalColorInfo, productInfo),
+                  child: _buildProfileCard(context, name, personalColorInfo, productInfo, index + 6),
                 );
               },
             ),
@@ -98,7 +97,7 @@ class SearchPage1 extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileCard(BuildContext context, String name, String personalColorInfo, String productInfo) {
+  Widget _buildProfileCard(BuildContext context, String name, String personalColorInfo, String productInfo, int imageIndex) {
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -107,7 +106,7 @@ class SearchPage1 extends StatelessWidget {
             builder: (context) => SearchPage2(
               productName: name,
               productInfo: productInfo,
-              productImage: 'assets/images/lip4.png', // 임시 이미지 URL
+              productImage: 'assets/images/lip$imageIndex.png', // 임시 이미지 URL
             ),
           ),
         );
@@ -118,7 +117,7 @@ class SearchPage1 extends StatelessWidget {
           child: Row(
             children: <Widget>[
               Image.asset(
-                'assets/images/lip1.png', // 임시 이미지 URL
+                'assets/images/lip$imageIndex.png', // 임시 이미지 URL
                 fit: BoxFit.cover,
                 width: 100, // 이미지 너비
                 height: 100, // 이미지 높이

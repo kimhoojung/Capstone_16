@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class SearchPage2 extends StatelessWidget {
+class SearchPage2 extends StatefulWidget {
   final String productName;
   final String productInfo;
   final String productImage;
@@ -13,47 +15,122 @@ class SearchPage2 extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  _SearchPage2State createState() => _SearchPage2State();
+}
+
+class _SearchPage2State extends State<SearchPage2> {
+  int _likesCount = 0;
+  bool _isLiked = false;
+  String _userId = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+    _loadLikesCount();
+    _checkIfLiked();
+  }
+
+  Future<void> _loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userId = prefs.getString('userId') ?? '';
+    });
+  }
+
+  Future<void> _loadLikesCount() async {
+    DocumentSnapshot productSnapshot = await FirebaseFirestore.instance.collection('products').doc(widget.productName).get();
+    if (productSnapshot.exists) {
+      setState(() {
+        _likesCount = productSnapshot['likeCount'] ?? 0;
+      });
+    }
+  }
+
+  Future<void> _checkIfLiked() async {
+    DocumentSnapshot likeSnapshot = await FirebaseFirestore.instance.collection('likes').doc('$_userId${widget.productName}').get();
+    if (likeSnapshot.exists) {
+      setState(() {
+        _isLiked = true;
+      });
+    }
+  }
+
+  Future<void> _toggleLike() async {
+    setState(() {
+      _isLiked = !_isLiked;
+      _likesCount += _isLiked ? 1 : -1;
+    });
+
+    final productRef = FirebaseFirestore.instance.collection('products').doc(widget.productName);
+
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      DocumentSnapshot productSnapshot = await transaction.get(productRef);
+
+      if (!productSnapshot.exists) {
+        await productRef.set({
+          'productName': widget.productName,
+          'productInfo': widget.productInfo,
+          'productImage': widget.productImage,
+          'likeCount': _isLiked ? 1 : 0,
+        });
+      } else {
+        int newLikesCount = (productSnapshot['likeCount'] ?? 0) + (_isLiked ? 1 : -1);
+        transaction.update(productRef, {'likeCount': newLikesCount});
+      }
+    });
+
+    if (_isLiked) {
+      await FirebaseFirestore.instance.collection('likes').doc('$_userId${widget.productName}').set({
+        'userId': _userId,
+        'productName': widget.productName,
+      });
+    } else {
+      await FirebaseFirestore.instance.collection('likes').doc('$_userId${widget.productName}').delete();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(productName), // 제품 이름을 앱 바에 표시
+        title: Text(widget.productName),
         actions: [
           IconButton(
-            icon: Icon(Icons.favorite_border),
-            onPressed: () {
-              // 좋아요 버튼 눌렀을 때의 액션 구현
-            },
+            icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
+            onPressed: _toggleLike,
           ),
         ],
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0), // 상하 여백 없이 좌우만 16의 패딩 추가
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Container(
-              height: 400.0, // 이미지 높이 300으로 고정
-              width: double.infinity, // 너비를 최대로 설정하여 좌우 여백이 동일하게 적용
-              child: Image.asset(productImage, fit: BoxFit.cover), // 제품 이미지
+              height: 400.0,
+              width: double.infinity,
+              child: Image.asset(widget.productImage, fit: BoxFit.cover),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(left: 16.0, top: 16.0, right: 16.0, bottom: 0), // 이미지 아래와 좌우에만 패딩 추가
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  productName, // 제품 이름
+                  widget.productName,
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 8), // 제품 이름과 설명 사이 8의 공간 추가
+                SizedBox(height: 8),
                 Text(
-                  productInfo, // 제품 설명
+                  widget.productInfo,
                   style: TextStyle(fontSize: 18),
                 ),
-                // 나머지 UI 요소들을 여기에 추가합니다.
+                SizedBox(height: 16),
+                Text('$_likesCount likes'),
               ],
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lip_service_2/login/login_page.dart';
 import 'my_posts_page.dart';
+import 'liked_posts_page.dart';  // 추가
 
 class MypagePage1 extends StatefulWidget {
   const MypagePage1({Key? key}) : super(key: key);
@@ -89,7 +90,10 @@ class _MypagePage1State extends State<MypagePage1> {
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                // 좋아요 한 게시물 화면으로 이동
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => LikedPostsPage()), // 좋아요 한 게시물 페이지로 이동
+                );
               },
               child: Text('좋아요 한 게시물'),
               style: ElevatedButton.styleFrom(

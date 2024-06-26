@@ -25,13 +25,19 @@ class _CommunityPage2State extends State<CommunityPage2> {
   String _nickname = '';
   int _likesCount = 0;
   bool _isLiked = false;
+  bool _isUserDataLoaded = false; // 유저 데이터 로드 여부를 나타내는 변수 추가
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
-    _loadLikesCount();
-    _checkIfLiked();
+    _loadUserData().then((_) {
+      // 유저 데이터 로드가 완료된 후 좋아요 상태 및 카운트를 로드
+      _loadLikesCount();
+      _checkIfLiked();
+      setState(() {
+        _isUserDataLoaded = true; // 유저 데이터 로드 완료
+      });
+    });
   }
 
   Future<void> _loadUserData() async {
@@ -46,7 +52,8 @@ class _CommunityPage2State extends State<CommunityPage2> {
     DocumentSnapshot postSnapshot = await FirebaseFirestore.instance.collection('posts').doc(widget.postId).get();
     if (postSnapshot.exists) {
       setState(() {
-        _likesCount = postSnapshot['likeCount'] ?? 0;
+        // likeCount가 존재하지 않을 경우 기본값 0을 사용
+        _likesCount = postSnapshot.get('likesCount') ?? 0;
       });
     }
   }
@@ -91,38 +98,44 @@ class _CommunityPage2State extends State<CommunityPage2> {
   }
 
   Future<void> _toggleLike() async {
-    setState(() {
-      _isLiked = !_isLiked;
-      _likesCount += _isLiked ? 1 : -1;
-    });
+    try {
+      final likeRef = FirebaseFirestore.instance.collection('likes').doc('$_userId${widget.postId}');
+      final likeDoc = await likeRef.get();
 
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
-      DocumentReference postRef = FirebaseFirestore.instance.collection('posts').doc(widget.postId);
-      DocumentSnapshot postSnapshot = await transaction.get(postRef);
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        DocumentReference postRef = FirebaseFirestore.instance.collection('posts').doc(widget.postId);
+        DocumentSnapshot postSnapshot = await transaction.get(postRef);
 
-      if (!postSnapshot.exists) {
-        throw Exception("Post does not exist!");
-      }
+        if (!postSnapshot.exists) {
+          throw Exception("Post does not exist!");
+        }
 
-      int newLikesCount = postSnapshot['likeCount'] + (_isLiked ? 1 : -1);
-      transaction.update(postRef, {'likeCount': newLikesCount});
-    });
+        int newLikesCount = (postSnapshot.get('likesCount') ?? 0);
 
-    if (_isLiked) {
-      await FirebaseFirestore.instance.collection('likes').add({
-        'userId': _userId,
-        'postId': widget.postId,
+        if (_isLiked) {
+          // 이미 좋아요를 누른 상태이면 좋아요 취소
+          transaction.delete(likeRef);
+          newLikesCount -= 1;
+        } else {
+          // 좋아요를 누르지 않은 상태이면 좋아요 추가
+          transaction.set(likeRef, {
+            'userId': _userId,
+            'postId': widget.postId,
+          });
+          newLikesCount += 1;
+        }
+
+        transaction.update(postRef, {'likesCount': newLikesCount});
+
+        setState(() {
+          _isLiked = !_isLiked;
+          _likesCount = newLikesCount;
+        });
       });
-    } else {
-      QuerySnapshot likeSnapshot = await FirebaseFirestore.instance
-          .collection('likes')
-          .where('userId', isEqualTo: _userId)
-          .where('postId', isEqualTo: widget.postId)
-          .get();
-
-      for (var doc in likeSnapshot.docs) {
-        await FirebaseFirestore.instance.collection('likes').doc(doc.id).delete();
-      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('좋아요 처리에 실패했습니다: $e')),
+      );
     }
   }
 
@@ -145,7 +158,7 @@ class _CommunityPage2State extends State<CommunityPage2> {
               children: [
                 IconButton(
                   icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
-                  onPressed: _toggleLike,
+                  onPressed: _isUserDataLoaded ? _toggleLike : null, // 유저 데이터가 로드된 경우에만 버튼 활성화
                 ),
                 SizedBox(width: 8),
                 Text('$_likesCount likes'),
