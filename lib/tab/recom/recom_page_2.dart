@@ -8,7 +8,7 @@ class RecomPage2 extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('AI 추천'),
+        title: Text('정보 입력'),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),

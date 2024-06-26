@@ -71,7 +71,7 @@ class _RecomPage1State extends State<RecomPage1> {
                     MaterialPageRoute(builder: (context) => RecomPage2())
                 );
               },
-              child: Text('AI 추천 시작하기'),
+              child: Text('내 퍼스널 컬러 입력하기'),
               style: ElevatedButton.styleFrom(
                 minimumSize: Size(double.infinity, 50),
               ),

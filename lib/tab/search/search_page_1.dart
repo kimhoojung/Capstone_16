@@ -43,7 +43,7 @@ class SearchPage1 extends StatelessWidget {
                           builder: (context) => SearchPage2(
                             productName: '제품 $index', // 제품 이름
                             productInfo: '제품에 대한 설명 $index', // 제품 설명
-                            productImage: 'assets/images/cosmetic${index + 1}.jpg', // 제품 이미지
+                            productImage: 'assets/images/lip${index + 1}.png', // 제품 이미지
                           ),
                         ),
                       );
@@ -54,7 +54,7 @@ class SearchPage1 extends StatelessWidget {
                         children: <Widget>[
                           Expanded(
                             child: Image.asset(
-                              'assets/images/cosmetic${index + 1}.jpg', // 이미지 URL
+                              'assets/images/lip${index + 1}.png', // 이미지 URL
                               fit: BoxFit.cover, // 컨테이너에 맞게 이미지를 채움
                             ),
                           ),
@@ -107,7 +107,7 @@ class SearchPage1 extends StatelessWidget {
             builder: (context) => SearchPage2(
               productName: name,
               productInfo: productInfo,
-              productImage: 'assets/images/cosmetic2.jpg', // 임시 이미지 URL
+              productImage: 'assets/images/lip4.png', // 임시 이미지 URL
             ),
           ),
         );
@@ -118,7 +118,7 @@ class SearchPage1 extends StatelessWidget {
           child: Row(
             children: <Widget>[
               Image.asset(
-                'assets/images/cosmetic2.jpg', // 임시 이미지 URL
+                'assets/images/lip1.png', // 임시 이미지 URL
                 fit: BoxFit.cover,
                 width: 100, // 이미지 너비
                 height: 100, // 이미지 높이

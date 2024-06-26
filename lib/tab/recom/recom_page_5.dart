@@ -8,7 +8,7 @@ class RecomPage5 extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('AI 추천'),
+        title: Text('정보 입력'),
       ),
       body: SingleChildScrollView(
         child: Center( // Center 위젯을 추가하여 내용을 중앙에 정렬
@@ -28,7 +28,7 @@ class RecomPage5 extends StatelessWidget {
                   height: 400,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage("assets/images/cosmetic2.jpg"), // 이미지 경로
+                      image: AssetImage("assets/images/lip2.png"), // 이미지 경로
                       fit: BoxFit.cover,
                     ),
                     borderRadius: BorderRadius.circular(12), // 이미지의 모서리를 둥글게 처리

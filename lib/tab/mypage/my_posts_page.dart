@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lip_service_2/tab/community/community_page_2.dart';
 
 class MyPostsPage extends StatefulWidget {
   const MyPostsPage({Key? key}) : super(key: key);
@@ -11,39 +12,31 @@ class MyPostsPage extends StatefulWidget {
 
 class _MyPostsPageState extends State<MyPostsPage> {
   String _userId = '';
-  List<DocumentSnapshot> _posts = [];
 
   @override
   void initState() {
     super.initState();
-    _loadUserPosts();
+    _loadUserData();
   }
 
-  Future<void> _loadUserPosts() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? userId = prefs.getString('userId');
+  Future<void> _loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userId = prefs.getString('userId') ?? '';
+    });
+  }
 
-      if (userId != null) {
-        print('User ID: $userId');  // 로그 추가
-
-        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-            .collection('posts')
-            .where('authorId', isEqualTo: userId)
-            .orderBy('timestamp', descending: true)
-            .get();
-
-        setState(() {
-          _userId = userId;
-          _posts = querySnapshot.docs;
-          print('Loaded ${_posts.length} posts');  // 로그 추가
-        });
-      } else {
-        print('No user ID found');  // 로그 추가
-      }
-    } catch (e) {
-      print('Error loading user posts: $e');  // 로그 추가
-    }
+  void _navigateToPostDetail(BuildContext context, String postId, String title, String content) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CommunityPage2(
+          postId: postId,
+          productName: title,
+          productInfo: content,
+        ),
+      ),
+    );
   }
 
   @override
@@ -54,20 +47,44 @@ class _MyPostsPageState extends State<MyPostsPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: _posts.isEmpty
-            ? Center(child: Text('작성한 게시물이 없습니다.'))
-            : ListView.builder(
-          itemCount: _posts.length,
-          itemBuilder: (context, index) {
-            var post = _posts[index];
-            return Card(
-              child: ListTile(
-                title: Text(post['title'] ?? 'No Title'),
-                subtitle: Text(post['content'] ?? 'No Content'),
-                onTap: () {
-                  // 게시물 클릭 시 자세히 보기
-                },
-              ),
+        child: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('posts')
+              .where('authorId', isEqualTo: _userId)
+              .orderBy('timestamp', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError) {
+              return Center(child: Text('Something went wrong: ${snapshot.error}'));
+            }
+
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return Center(child: Text('작성한 게시물이 없습니다.'));
+            }
+
+            final posts = snapshot.data!.docs;
+
+            return ListView.builder(
+              itemCount: posts.length,
+              itemBuilder: (context, index) {
+                var post = posts[index];
+                return Card(
+                  child: ListTile(
+                    title: Text(post['title'] ?? 'No Title'),
+                    subtitle: Text(post['content'] ?? 'No Content'),
+                    onTap: () => _navigateToPostDetail(
+                      context,
+                      post.id,
+                      post['title'] ?? 'No title',
+                      post['content'] ?? 'No content',
+                    ),
+                  ),
+                );
+              },
             );
           },
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart'; // 날짜 포맷팅을 위한 패키지
 
 class CommunityPage2 extends StatefulWidget {
   final String postId;
@@ -45,7 +46,7 @@ class _CommunityPage2State extends State<CommunityPage2> {
     DocumentSnapshot postSnapshot = await FirebaseFirestore.instance.collection('posts').doc(widget.postId).get();
     if (postSnapshot.exists) {
       setState(() {
-        _likesCount = postSnapshot['likesCount'] ?? 0;
+        _likesCount = postSnapshot['likeCount'] ?? 0;
       });
     }
   }
@@ -103,8 +104,8 @@ class _CommunityPage2State extends State<CommunityPage2> {
         throw Exception("Post does not exist!");
       }
 
-      int newLikesCount = postSnapshot['likesCount'] + (_isLiked ? 1 : -1);
-      transaction.update(postRef, {'likesCount': newLikesCount});
+      int newLikesCount = postSnapshot['likeCount'] + (_isLiked ? 1 : -1);
+      transaction.update(postRef, {'likeCount': newLikesCount});
     });
 
     if (_isLiked) {
@@ -177,9 +178,21 @@ class _CommunityPage2State extends State<CommunityPage2> {
                     itemCount: comments.length,
                     itemBuilder: (context, index) {
                       final comment = comments[index];
+                      final timestamp = comment['timestamp'] as Timestamp?;
+                      final formattedTime = timestamp != null
+                          ? DateFormat('yyyy-MM-dd HH:mm').format(timestamp.toDate())
+                          : 'Unknown time';
+
                       return ListTile(
                         title: Text(comment['nickname'] ?? 'Unknown'),
-                        subtitle: Text(comment['content'] ?? ''),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(formattedTime),
+                            SizedBox(height: 4),
+                            Text(comment['content'] ?? ''),
+                          ],
+                        ),
                       );
                     },
                   );
