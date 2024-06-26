@@ -1,10 +1,44 @@
 import 'package:flutter/material.dart';
-import 'signup_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../tab/tab_page.dart';
+import 'signup_page.dart';
 
-
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
+
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _idController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  void _login() async {
+    try {
+      DocumentSnapshot userDoc = await _firestore.collection('users').doc(_idController.text).get();
+
+      if (userDoc.exists && userDoc['password'] == _passwordController.text) {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('userId', _idController.text);
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => TabPage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invalid ID or Password')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to sign in: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +49,7 @@ class LoginPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Spacer(flex: 2), // 환영합니다! 위에 더 많은 공간을 만들기 위해
+              Spacer(flex: 1),
               Text(
                 '환영합니다!',
                 style: TextStyle(fontSize: 24),
@@ -23,6 +57,7 @@ class LoginPage extends StatelessWidget {
               ),
               SizedBox(height: 48),
               TextFormField(
+                controller: _idController,
                 decoration: InputDecoration(
                   labelText: '아이디 입력',
                   border: OutlineInputBorder(),
@@ -30,6 +65,7 @@ class LoginPage extends StatelessWidget {
               ),
               SizedBox(height: 16),
               TextFormField(
+                controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: '비밀번호 입력',
@@ -38,29 +74,23 @@ class LoginPage extends StatelessWidget {
               ),
               SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () {
-                  // 로그인 버튼 눌렀을 때의 행동
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => TabPage())
-                  );
-                },
+                onPressed: _login,
                 child: Text('로그인'),
                 style: ElevatedButton.styleFrom(
-                  minimumSize: Size.fromHeight(50), // 버튼 높이
+                  minimumSize: Size.fromHeight(50),
                 ),
               ),
-              Spacer(), // 남은 공간을 균등하게 나눔
+              SizedBox(height: 12),
               TextButton(
                 onPressed: () {
                   Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SignUpPage())
+                    context,
+                    MaterialPageRoute(builder: (context) => SignUpPage()),
                   );
                 },
                 child: Text('회원가입'),
               ),
-              Spacer(), // 하단 공간
+              Spacer(),
             ],
           ),
         ),

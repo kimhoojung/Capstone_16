@@ -1,5 +1,5 @@
 name: lip_service_2
-description: "존나 어렵네 씨바"
+description: "none"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -30,6 +30,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  lottie: ^1.4.1
+  firebase_core: ^3.1.1
+  firebase_auth: ^5.1.1
+  cloud_firestore: ^5.0.2
+  shared_preferences: ^2.2.3
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -57,6 +62,10 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/check_animation.json
 
   # To add assets to your application, add an assets section, like this:
   # assets:

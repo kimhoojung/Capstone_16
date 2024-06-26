@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-
 import 'recom/recom_page_1.dart';
 import 'search/search_page_1.dart';
 import 'community/community_page_1.dart';
 import 'mypage/mypage_page_1.dart';
 
 class TabPage extends StatefulWidget {
+  static const routeName = '/tab';
+
   const TabPage({Key? key}) : super(key: key);
 
   @override
@@ -38,13 +39,16 @@ class _TabPageState extends State<TabPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.recommend),
             label: 'AI추천',
-          ),BottomNavigationBarItem(
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.search),
             label: '제품 검색',
-          ),BottomNavigationBarItem(
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.forum_outlined),
             label: '게시판',
-          ),BottomNavigationBarItem(
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: '마이페이지',
           ),
