@@ -13,7 +13,6 @@ class RecomPage1 extends StatefulWidget {
 class _RecomPage1State extends State<RecomPage1> {
   String _name = 'Loading...';
   String _personalColorInfo = '퍼스널 컬러 정보';
-  String _productInfo = '사용 제품 정보';
 
   @override
   void initState() {
@@ -30,9 +29,12 @@ class _RecomPage1State extends State<RecomPage1> {
         DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
 
         if (userDoc.exists) {
+          Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
           setState(() {
-            _name = userDoc['name'] ?? 'Unknown';
-            // 필요한 경우 다른 사용자 정보도 가져올 수 있음
+            _name = userData?['name'] ?? 'Unknown';
+            _personalColorInfo = userData?.containsKey('personal_color') == true
+                ? userData!['personal_color']
+                : '퍼스널 컬러 정보';
           });
         } else {
           setState(() {
@@ -62,7 +64,7 @@ class _RecomPage1State extends State<RecomPage1> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: <Widget>[
-            _buildProfileCard(_name, _personalColorInfo, _productInfo),
+            _buildProfileCard(_name, _personalColorInfo),
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
@@ -82,7 +84,7 @@ class _RecomPage1State extends State<RecomPage1> {
     );
   }
 
-  Widget _buildProfileCard(String name, String personalColorInfo, String productInfo) {
+  Widget _buildProfileCard(String name, String personalColorInfo) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -99,7 +101,6 @@ class _RecomPage1State extends State<RecomPage1> {
                     children: <Widget>[
                       Text(name, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                       Text(personalColorInfo),
-                      Text(productInfo),
                     ],
                   ),
                 ),

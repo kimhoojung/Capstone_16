@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RecomPage5 extends StatelessWidget {
   final bool isWarmTone;
@@ -13,6 +15,30 @@ class RecomPage5 extends StatelessWidget {
     required this.season,
     required this.subSeason,
   }) : super(key: key);
+
+  Future<void> _savePersonalColor(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userId = prefs.getString('userId');
+
+    if (userId != null) {
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(userId).update({
+          'personal_color': '$season$tone #$subSeason',
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('퍼스널 컬러가 저장되었습니다!')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('저장 실패: $e')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('사용자 정보를 불러올 수 없습니다.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,9 +121,7 @@ class RecomPage5 extends StatelessWidget {
               ),
               SizedBox(height: 32),
               ElevatedButton(
-                onPressed: () {
-                  // 결과를 저장하거나 다른 화면으로 이동하는 등의 기능 구현
-                },
+                onPressed: () => _savePersonalColor(context),
                 child: Text('결과 저장하기'),
               ),
             ],

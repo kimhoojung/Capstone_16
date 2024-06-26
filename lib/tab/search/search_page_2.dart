@@ -19,16 +19,16 @@ class SearchPage2 extends StatefulWidget {
 }
 
 class _SearchPage2State extends State<SearchPage2> {
-  int _likesCount = 0;
-  bool _isLiked = false;
+  int _productLikesCount = 0;
+  bool _isProductLiked = false;
   String _userId = '';
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
-    _loadLikesCount();
-    _checkIfLiked();
+    _loadProductLikesCount();
+    _checkIfProductLiked();
   }
 
   Future<void> _loadUserData() async {
@@ -38,55 +38,62 @@ class _SearchPage2State extends State<SearchPage2> {
     });
   }
 
-  Future<void> _loadLikesCount() async {
+  Future<void> _loadProductLikesCount() async {
     DocumentSnapshot productSnapshot = await FirebaseFirestore.instance.collection('products').doc(widget.productName).get();
     if (productSnapshot.exists) {
       setState(() {
-        _likesCount = productSnapshot['likeCount'] ?? 0;
+        _productLikesCount = productSnapshot.get('productLikesCount') ?? 0;
       });
     }
   }
 
-  Future<void> _checkIfLiked() async {
-    DocumentSnapshot likeSnapshot = await FirebaseFirestore.instance.collection('likes').doc('$_userId${widget.productName}').get();
+  Future<void> _checkIfProductLiked() async {
+    DocumentSnapshot likeSnapshot = await FirebaseFirestore.instance.collection('product_likes').doc('$_userId${widget.productName}').get();
     if (likeSnapshot.exists) {
       setState(() {
-        _isLiked = true;
+        _isProductLiked = true;
       });
     }
   }
 
-  Future<void> _toggleLike() async {
-    setState(() {
-      _isLiked = !_isLiked;
-      _likesCount += _isLiked ? 1 : -1;
-    });
-
+  Future<void> _toggleProductLike() async {
     final productRef = FirebaseFirestore.instance.collection('products').doc(widget.productName);
+    final likeRef = FirebaseFirestore.instance.collection('product_likes').doc('$_userId${widget.productName}');
 
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
-      DocumentSnapshot productSnapshot = await transaction.get(productRef);
+    try {
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        DocumentSnapshot productSnapshot = await transaction.get(productRef);
 
-      if (!productSnapshot.exists) {
-        await productRef.set({
-          'productName': widget.productName,
-          'productInfo': widget.productInfo,
-          'productImage': widget.productImage,
-          'likeCount': _isLiked ? 1 : 0,
-        });
-      } else {
-        int newLikesCount = (productSnapshot['likeCount'] ?? 0) + (_isLiked ? 1 : -1);
-        transaction.update(productRef, {'likeCount': newLikesCount});
-      }
-    });
-
-    if (_isLiked) {
-      await FirebaseFirestore.instance.collection('likes').doc('$_userId${widget.productName}').set({
-        'userId': _userId,
-        'productName': widget.productName,
+        if (!productSnapshot.exists) {
+          transaction.set(productRef, {
+            'productName': widget.productName,
+            'productInfo': widget.productInfo,
+            'productImage': widget.productImage,
+            'productLikesCount': _isProductLiked ? 0 : 1,
+          });
+        } else {
+          final data = productSnapshot.data() as Map<String, dynamic>;
+          int currentLikesCount = data['productLikesCount'] ?? 0;
+          int newLikesCount = currentLikesCount + (_isProductLiked ? -1 : 1);
+          transaction.update(productRef, {'productLikesCount': newLikesCount});
+        }
       });
-    } else {
-      await FirebaseFirestore.instance.collection('likes').doc('$_userId${widget.productName}').delete();
+
+      if (_isProductLiked) {
+        await likeRef.delete();
+      } else {
+        await likeRef.set({
+          'userId': _userId,
+          'productName': widget.productName,
+        });
+      }
+
+      setState(() {
+        _isProductLiked = !_isProductLiked;
+        _productLikesCount += _isProductLiked ? 1 : -1;
+      });
+    } catch (e) {
+      print('Error updating like status: $e');
     }
   }
 
@@ -97,8 +104,8 @@ class _SearchPage2State extends State<SearchPage2> {
         title: Text(widget.productName),
         actions: [
           IconButton(
-            icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
-            onPressed: _toggleLike,
+            icon: Icon(_isProductLiked ? Icons.favorite : Icons.favorite_border),
+            onPressed: _toggleProductLike,
           ),
         ],
       ),
@@ -130,7 +137,7 @@ class _SearchPage2State extends State<SearchPage2> {
                   style: TextStyle(fontSize: 18),
                 ),
                 SizedBox(height: 16),
-                Text('$_likesCount likes'),
+                Text('$_productLikesCount likes'),
               ],
             ),
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart'; // 날짜 포맷팅을 위한 패키지
+import 'edit_posting_dialog.dart'; // 게시물 수정 다이얼로그 추가
 
 class CommunityPage2 extends StatefulWidget {
   final String postId;
@@ -26,6 +27,7 @@ class _CommunityPage2State extends State<CommunityPage2> {
   int _likesCount = 0;
   bool _isLiked = false;
   bool _isUserDataLoaded = false; // 유저 데이터 로드 여부를 나타내는 변수 추가
+  bool _isMyPost = false; // 내가 작성한 게시물인지 여부를 나타내는 변수 추가
 
   @override
   void initState() {
@@ -46,6 +48,14 @@ class _CommunityPage2State extends State<CommunityPage2> {
       _userId = prefs.getString('userId') ?? '';
       _nickname = prefs.getString('nickname') ?? '';
     });
+
+    // 게시물 작성자와 현재 사용자의 ID를 비교하여 내가 작성한 게시물인지 확인
+    DocumentSnapshot postSnapshot = await FirebaseFirestore.instance.collection('posts').doc(widget.postId).get();
+    if (postSnapshot.exists) {
+      setState(() {
+        _isMyPost = postSnapshot.get('authorId') == _userId;
+      });
+    }
   }
 
   Future<void> _loadLikesCount() async {
@@ -139,11 +149,29 @@ class _CommunityPage2State extends State<CommunityPage2> {
     }
   }
 
+  void _showEditPostDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => EditPostDialog(
+        postId: widget.postId,
+        initialProductName: widget.productName,
+        initialProductInfo: widget.productInfo,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.productName),
+        actions: [
+          if (_isMyPost)
+            IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: _showEditPostDialog,
+            ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

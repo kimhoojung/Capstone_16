@@ -3,7 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lip_service_2/login/login_page.dart';
 import 'my_posts_page.dart';
-import 'liked_posts_page.dart';  // 추가
+import 'liked_posts_page.dart';
+import 'user_info_dialog.dart'; // 추가
 
 class MypagePage1 extends StatefulWidget {
   const MypagePage1({Key? key}) : super(key: key);
@@ -14,6 +15,8 @@ class MypagePage1 extends StatefulWidget {
 
 class _MypagePage1State extends State<MypagePage1> {
   String _name = 'Loading...';
+  String _userId = '';
+  String _personalColor = '';
 
   @override
   void initState() {
@@ -31,7 +34,9 @@ class _MypagePage1State extends State<MypagePage1> {
 
         if (userDoc.exists) {
           setState(() {
+            _userId = userId;
             _name = userDoc['name'] ?? 'Unknown';
+            _personalColor = userDoc['personal_color'] ?? '정보 없음';
           });
         } else {
           setState(() {
@@ -47,6 +52,43 @@ class _MypagePage1State extends State<MypagePage1> {
       setState(() {
         _name = 'Error loading user data';
       });
+    }
+  }
+
+  Future<void> _showUserInfo() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? userId = prefs.getString('userId');
+
+      if (userId != null) {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+
+        if (userDoc.exists) {
+          String name = userDoc['name'] ?? 'Unknown';
+          String personalColor = userDoc['personal_color'] ?? '정보 없음';
+
+          showDialog(
+            context: context,
+            builder: (context) => UserInfoDialog(
+              userId: userId,
+              name: name,
+              personalColor: personalColor,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('User not found')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No user ID found')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading user data')),
+      );
     }
   }
 
@@ -75,6 +117,14 @@ class _MypagePage1State extends State<MypagePage1> {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: _showUserInfo, // 내 정보 버튼 클릭 시
+              child: Text('내 정보'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: Size(double.infinity, 50),
+              ),
+            ),
+            SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
