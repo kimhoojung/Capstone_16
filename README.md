@@ -1,6 +1,6 @@
 # lip_service_2
 
-존나 어렵네 씨바
+
 
 ## Getting Started
 
